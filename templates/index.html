@@ -1,40 +1,114 @@
-
 <!DOCTYPE html>
 <html>
 <head>
     <title>Website Change Detector</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f8;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #ccc;
+        }
+        input {
+            width: 70%;
+            padding: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #fafafa;
+            border-radius: 5px;
+        }
+        .major {
+            color: red;
+            font-weight: bold;
+        }
+        .minor {
+            color: orange;
+            font-weight: bold;
+        }
+        .added {
+            color: green;
+        }
+        .removed {
+            color: red;
+        }
+    </style>
 </head>
+
 <body>
-    <h1>Website Change Detection System</h1>
+
+<div class="container">
+    <h1>🌐 Website Change Detector</h1>
 
     <input type="text" id="url" placeholder="Enter website URL">
-    <button onclick="addUrl()">Add URL</button>
-    <button onclick="checkChanges()">Check Changes</button>
+    <button onclick="addUrl()">Add</button>
+    <button onclick="checkChanges()">Check</button>
 
-    <pre id="output"></pre>
+    <div class="result" id="output"></div>
+</div>
 
-    <script>
-        async function addUrl() {
-            const url = document.getElementById("url").value;
-            const res = await fetch("/add", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({url})
-            });
-            const data = await res.json();
-            document.getElementById("output").innerText = JSON.stringify(data, null, 2);
+<script>
+async function addUrl() {
+    const url = document.getElementById("url").value;
+
+    const res = await fetch("/add", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({url})
+    });
+
+    const data = await res.json();
+    document.getElementById("output").innerHTML =
+        "<b>" + data.message + "</b>";
+}
+
+async function checkChanges() {
+    const url = document.getElementById("url").value;
+
+    const res = await fetch("/check", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({url})
+    });
+
+    const data = await res.json();
+
+    let html = "";
+
+    html += `<h3>🧠 Summary:</h3> <p>${data.summary}</p>`;
+
+    html += `<h3>📊 Type:</h3> 
+        <p class="${data.type}">${data.type.toUpperCase()}</p>`;
+
+    html += `<h3>🔍 Changes:</h3>`;
+
+    data.changes.forEach(c => {
+        if (c.startsWith("+")) {
+            html += `<div class="added">${c}</div>`;
+        } else {
+            html += `<div class="removed">${c}</div>`;
         }
+    });
 
-        async function checkChanges() {
-            const url = document.getElementById("url").value;
-            const res = await fetch("/check", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({url})
-            });
-            const data = await res.json();
-            document.getElementById("output").innerText = JSON.stringify(data, null, 2);
-        }
-    </script>
+    document.getElementById("output").innerHTML = html;
+}
+</script>
+
 </body>
 </html>
