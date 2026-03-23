@@ -24,29 +24,25 @@ def save_data(data):
     with open(DATA_FILE, "w") as f:
         json.dump(data, f, indent=2)
 
-# ✅ Clean HTML (IMPORTANT FIX)
+# Clean HTML
 def extract_text(html):
     soup = BeautifulSoup(html, "html.parser")
 
-    # Remove scripts and styles
     for tag in soup(["script", "style", "noscript"]):
         tag.decompose()
 
     text = soup.get_text(separator=" ")
-    return " ".join(text.split())  # remove extra spaces
+    return " ".join(text.split())
 
-# ✅ Fetch with headers (avoid bot detection)
+# Fetch content
 def fetch_content(url):
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+        "User-Agent": "Mozilla/5.0"
     }
     response = requests.get(url, headers=headers, timeout=10)
     return extract_text(response.text)
 
-# ---------------------------
-# AI-like Summary (Rule-based)
-# ---------------------------
-
+# AI-like summary
 def summarize_changes(diff):
     added = sum(1 for d in diff if d.startswith("+"))
     removed = sum(1 for d in diff if d.startswith("-"))
@@ -57,10 +53,7 @@ def summarize_changes(diff):
     if added > 20 or removed > 20:
         return "Major update detected: significant content added or removed."
 
-    if added > 0 or removed > 0:
-        return "Minor update: small text changes detected."
-
-    return "Changes detected."
+    return "Minor update: small text changes detected."
 
 # ---------------------------
 # Routes
@@ -76,13 +69,12 @@ def add_url():
     data = load_data()
 
     content = fetch_content(url)
-    timestamp = str(datetime.now())
 
     if url not in data:
         data[url] = []
 
     data[url].append({
-        "timestamp": timestamp,
+        "timestamp": str(datetime.now()),
         "content": content
     })
 
@@ -101,19 +93,14 @@ def check_changes():
     new_content = fetch_content(url)
 
     diff = list(difflib.ndiff(old_content.split(), new_content.split()))
-
-    # Keep only meaningful changes
     changes = [d for d in diff if d.startswith("+ ") or d.startswith("- ")]
 
-    # Classification
     change_type = "minor"
     if len(changes) > 50:
         change_type = "major"
 
-    # AI-like summary
     summary = summarize_changes(changes)
 
-    # Save new version
     data[url].append({
         "timestamp": str(datetime.now()),
         "content": new_content
@@ -124,10 +111,12 @@ def check_changes():
     return jsonify({
         "summary": summary,
         "type": change_type,
-        "changes": changes[:50]  # limit output
+        "changes": changes[:50]
     })
 
 # ---------------------------
+# ✅ CORRECT PLACE FOR RUN
+# ---------------------------
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
