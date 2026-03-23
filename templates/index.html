@@ -1,0 +1,40 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Website Change Detector</title>
+</head>
+<body>
+    <h1>Website Change Detection System</h1>
+
+    <input type="text" id="url" placeholder="Enter website URL">
+    <button onclick="addUrl()">Add URL</button>
+    <button onclick="checkChanges()">Check Changes</button>
+
+    <pre id="output"></pre>
+
+    <script>
+        async function addUrl() {
+            const url = document.getElementById("url").value;
+            const res = await fetch("/add", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({url})
+            });
+            const data = await res.json();
+            document.getElementById("output").innerText = JSON.stringify(data, null, 2);
+        }
+
+        async function checkChanges() {
+            const url = document.getElementById("url").value;
+            const res = await fetch("/check", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({url})
+            });
+            const data = await res.json();
+            document.getElementById("output").innerText = JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html>
